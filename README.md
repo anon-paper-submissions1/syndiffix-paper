@@ -2,7 +2,7 @@ Code for testing syndiffix vulnerabilities, for the syndiffix paper.
 
 ### Basic data prep
 
-Requires python3.10 or greater.
+Requires python3.10 or greater. Requires a SLURM installation.
 
 Create a directory somewhere. Establish an environment variable `SDX_TEST_DIR` which is the path to that directory.
 
