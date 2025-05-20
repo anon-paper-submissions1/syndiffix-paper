@@ -4,14 +4,13 @@ import pandas as pd
 import json
 import sys
 import random
-import numpy as np
 import seaborn as sns
-import alscore
+from anonymity_loss_coefficient import AnonymityLossCoefficient
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import precision_recall_curve, auc, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import  accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -19,7 +18,7 @@ import itertools
 import pprint
 
 pp = pprint.PrettyPrinter(indent=4)
-als = alscore.ALScore()
+alcm = AnonymityLossCoefficient
 
 remove_bad_files = False
 #sample_for_model = 200000
@@ -339,7 +338,7 @@ def alc_cap(df):
             c_atk = cov_atk
 
         # Compute alc
-        alc = als.alscore(p_base=p_base, c_base=c_base, p_attack=p_atk, c_attack=c_atk)
+        alc = alcm.alc(p_base=p_base, r_base=c_base, p_attack=p_atk, r_attack=c_atk)
 
         # Add alc to the list
         alc_list.append(alc)
@@ -389,8 +388,8 @@ def alc_capt(df):
         cov_atk = len(group[(group['pred_full_attack'] == 'tp') | (group['pred_full_attack'] == 'fp')]) / group_size
         c_atk2 = cov_atk * cov_avg
         c_atk = cov_atk
-        alc2 = als.alscore(p_base=p_base, c_base=c_base, p_attack=p_atk, c_attack=c_atk2)
-        alc = als.alscore(p_base=p_base, c_base=c_base, p_attack=p_atk, c_attack=c_atk)
+        alc2 = alcm.alc(p_base=p_base, r_base=c_base, p_attack=p_atk, r_attack=c_atk2)
+        alc = alcm.alc(p_base=p_base, r_base=c_base, p_attack=p_atk, r_attack=c_atk)
         alc_list2.append(alc2)
         alc_list.append(alc)
         if alc > 0.35:
