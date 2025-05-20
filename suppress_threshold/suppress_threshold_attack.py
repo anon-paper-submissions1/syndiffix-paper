@@ -34,6 +34,7 @@ else:
     base_path = os.getcwd()
 if 'SDX_TEST_CODE' in os.environ:
     code_path = os.getenv('SDX_TEST_CODE')
+    code_path = os.path.join(code_path, 'suppress_threshold')
     from syndiffix_tools.tables_manager import TablesManager
 else:
     code_path = None
@@ -684,8 +685,9 @@ def run_attacks(tm, file_path, job):
         combs = [[job['columns'][0]], [job['columns'][1]], job['columns']]
 
     # For each comb, find all values that appear exactly 3 times in tm.df_orig
+    print(f"Run attacks on {len(combs)} combinations")
     sum_base_probs = 0
-    do_summarize = False
+    do_summarize = True
     for comb in combs:
         if len(attack_summary['attack_results']) >= max_attacks:
             attack_summary['summary']['finished'] = False
@@ -823,9 +825,12 @@ def run_attack(job_num):
 
     # Get the job
     job = jobs[job_num]
+    print(f"Running attack job {job_num}:")
+    pp.pprint(job)
 
     # Create 'instances' directory in attack_path if it isn't already there
     instances_path = os.path.join(attack_path, 'instances')
+    print(f"Creating instances directory (if not exists): {instances_path}")
     os.makedirs(instances_path, exist_ok=True)
 
     # Make a file_name and file_path

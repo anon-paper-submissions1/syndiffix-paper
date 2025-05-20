@@ -21,6 +21,7 @@ else:
     base_path = os.getcwd()
 if 'SDX_TEST_CODE' in os.environ:
     code_path = os.getenv('SDX_TEST_CODE')
+    code_path = os.path.join(code_path, 'suppress_threshold')
 else:
     code_path = None
 os.makedirs(base_path, exist_ok=True)

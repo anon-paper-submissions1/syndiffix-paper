@@ -30,10 +30,6 @@ if 'SDX_TEST_DIR' in os.environ:
     base_path = os.getenv('SDX_TEST_DIR')
 else:
     base_path = os.getcwd()
-if 'SDX_TEST_CODE' in os.environ:
-    code_path = os.getenv('SDX_TEST_CODE')
-else:
-    code_path = None
 os.makedirs(base_path, exist_ok=True)
 runs_path = os.path.join(base_path, 'outlier_theory')
 os.makedirs(runs_path, exist_ok=True)
