@@ -6,7 +6,7 @@ import json
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 import seaborn as sns
-import alscore
+from anonymity_loss_coefficient import AnonymityLossCoefficient
 from syndiffix import Synthesizer
 from syndiffix.common import AnonymizationParams, SuppressionParams
 # from syndiffix_tools.tree_walker import *
@@ -245,7 +245,7 @@ def make_plot():
         results = json.load(f)
 
     data = []
-    als = alscore.ALScore()
+    alcm = AnonymityLossCoefficient()
     for datum in results['tests']:
         tar = datum['num_target_val']
         gap = datum['low_mean_gap']
@@ -280,14 +280,14 @@ def make_plot():
         # A value of 0 would screw up the log scale
         coverage = max(1/no_positives, coverage)
         # We can make a statistical guess on every 
-        alc_cbase1 = als.alscore(p_base = stat_guess,
-                          c_base = 1.0,
+        alc_cbase1 = alcm.alc(p_base = stat_guess,
+                          r_base = 1.0,
                           p_attack = precision,
-                          c_attack = coverage)
-        alc_cbase_catk = als.alscore(p_base = stat_guess,
-                          c_base = coverage,
+                          r_attack = coverage)
+        alc_cbase_catk = alcm.alc(p_base = stat_guess,
+                          r_base = coverage,
                           p_attack = precision,
-                          c_attack = coverage)
+                          r_attack = coverage)
         data.append({
             'dim': int(datum['dim']),
             'sd_gap': int(gap),
