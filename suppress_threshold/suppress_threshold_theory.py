@@ -9,7 +9,7 @@ import seaborn as sns
 from anonymity_loss_coefficient import AnonymityLossCoefficient
 from syndiffix import Synthesizer
 from syndiffix.common import AnonymizationParams, SuppressionParams
-# from syndiffix_tools.tree_walker import *
+from syndiffix_tools.tree_walker import *
 import pprint
 import sys
 
