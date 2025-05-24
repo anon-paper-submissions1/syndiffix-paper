@@ -34,7 +34,7 @@ orig_files_dir = os.path.join(base_path, 'original_data_parquet')
 work_files_dir = os.path.join(attack_path, 'work_files')
 os.makedirs(work_files_dir, exist_ok=True)
 
-def do_attack(job_num, strength):
+def do_attack(job_num):
     with open(jobs_path, 'r') as f:
         jobs = json.load(f)
     # get the job from the jobs list
@@ -42,7 +42,7 @@ def do_attack(job_num, strength):
         print(f"Job number {job_num} is out of range. There are only {len(jobs)} jobs.")
         sys.exit()
     job = jobs[job_num]
-    print(f"Job number {job_num} started for strength {strength}.")
+    print(f"Job number {job_num} started.")
     pp.pprint(job)
     df_orig = pd.read_parquet(os.path.join(orig_files_dir, job['dataset']))
     file_name = job['dataset'].split('.')[0]
@@ -833,14 +833,11 @@ def main():
 
     args = parser.parse_args()
 
-    # Determine the strength based on the -w/--weak flag
-    strength = "weak" if args.weak else "strong"
-
     if args.command == "attack":
         if args.job_num is None:
             print("Error: 'attack' command requires a job number.")
             sys.exit(1)
-        do_attack(args.job_num, strength)
+        do_attack(args.job_num)
     elif args.command == "plot":
         do_plots()
     elif args.command == "gather":
