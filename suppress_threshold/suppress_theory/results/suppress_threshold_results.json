@@ -1,0 +1,23 @@
+{
+    "tests": [],
+    "summary0": {
+        "neg_pos_1_neg_1": 0,
+        "neg_pos_1_neg_0": 0,
+        "neg_pos_0_neg_1": 0,
+        "neg_pos_0_neg_0": 0,
+        "pos_pos_1_neg_1": 0,
+        "pos_pos_1_neg_0": 0,
+        "pos_pos_0_neg_1": 0,
+        "pos_pos_0_neg_0": 0
+    },
+    "summary20": {
+        "neg_pos_1_neg_1": 0,
+        "neg_pos_1_neg_0": 0,
+        "neg_pos_0_neg_1": 0,
+        "neg_pos_0_neg_0": 0,
+        "pos_pos_1_neg_1": 0,
+        "pos_pos_1_neg_0": 0,
+        "pos_pos_0_neg_1": 0,
+        "pos_pos_0_neg_0": 0
+    }
+}

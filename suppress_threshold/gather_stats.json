@@ -1,0 +1,27 @@
+{
+    "num_possible_combs_targets": 750922773,
+    "num_possible_combs": 17975780,
+    "num_datasets": 14,
+    "num_attacks": 30448273,
+    "num_positive": 23424521,
+    "num_negative": 7023752,
+    "num_best_syn": 30448273,
+    "num_known_columns": [
+        0,
+        13316695,
+        17131578,
+        0,
+        0,
+        0
+    ],
+    "percent_positive": 76.93,
+    "percent_best_syn": 100.0,
+    "percent_known_columns": [
+        0.0,
+        43.74,
+        56.26,
+        0.0,
+        0.0,
+        0.0
+    ]
+}

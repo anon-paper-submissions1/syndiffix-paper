@@ -6,7 +6,7 @@ import sys
 import random
 import statistics
 from syndiffix import Synthesizer
-import alscore
+from anonymity_loss_coefficient import AnonymityLossCoefficient
 import pprint
 import sys
 
@@ -141,7 +141,7 @@ def make_plot():
 
 
 def make_one_plot(df):
-    als = alscore.ALScore()
+    alcm = AnonymityLossCoefficient()
     print(f"Total rows = {len(df)}")
     df_counts = df.groupby(['threshold', 'prediction']).size().unstack(fill_value=0)
     print(df_counts)
@@ -155,7 +155,7 @@ def make_one_plot(df):
         prec = row['tp'] / (row['tp'] + row['fp'])
         recall = (row['tp'] + row['fp']) / (row['tp'] + row['fp'] + row['abstain'])
         print(f"Threshold: {index}, Precision: {prec}, Recall: {recall}")
-        alc = als.alscore(p_base=prec_baseline, c_base=1, p_attack=prec, c_attack=recall)
+        alc = alcm.alc(p_base=prec_baseline, r_base=1, p_attack=prec, r_attack=recall)
         print(f"ALC: {alc}")
 
     df_fp = df[(df['threshold'] == 2.0) & (df['prediction'] == 'fp')]
@@ -255,7 +255,7 @@ def get_sorted_value_counts(value_counts):
     counts = [item[1] for item in sorted_items]
     return vals, counts
 
-def update_attack(als, res_key_prefix, filtered_df, precision_results, all_results):
+def update_attack(alcm, res_key_prefix, filtered_df, precision_results, all_results):
     for mult in prediction_multipliers:
         res_key = f"{res_key_prefix}x{mult}"
         res_col = f"result_1_2_{mult}"
@@ -275,7 +275,7 @@ def update_attack(als, res_key_prefix, filtered_df, precision_results, all_resul
         coverage = (len(df_true) + len(df_false)) / len(filtered_df)
         prec_attack = len(df_true) / (len(df_true) + len(df_false))
         prec_base = 1 / (df_predict['num_vals'].sum() / len(df_predict))
-        alc = als.alscore(p_base=prec_base, c_base=coverage, p_attack=prec_attack, c_attack=coverage)
+        alc = alcm.alc(p_base=prec_base, r_base=coverage, p_attack=prec_attack, r_attack=coverage)
 
         # Store the precision result
         precision_results[res_key] = {

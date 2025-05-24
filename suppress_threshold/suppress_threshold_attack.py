@@ -18,7 +18,7 @@ import itertools
 import pprint
 
 pp = pprint.PrettyPrinter(indent=4)
-alcm = AnonymityLossCoefficient
+alcm = AnonymityLossCoefficient()
 
 remove_bad_files = False
 #sample_for_model = 200000
@@ -253,7 +253,7 @@ def make_bin_scatterplot(df_bin, color_by, label, filename, pi_floor):
     plt.xscale('log')
     plt.hlines(0.5, 0.001, 1, colors='black', linestyles='--')
     plt.vlines(0.001, 0.5, 1.0, colors='black', linestyles='--')
-    plt.xlabel('Coverage (log scale)', fontsize=13, labelpad=10)
+    plt.xlabel('Recall (log scale)', fontsize=13, labelpad=10)
     plt.ylabel(f'Precision Improvement\n(floored at {pi_floor})', fontsize=13, labelpad=10)
 
     # Create custom legend
@@ -295,7 +295,7 @@ def plot_move_avg(df):
     cbar = plt.colorbar(scatter1)
     cbar.set_label('Target Value Fraction', rotation=270, labelpad=15)
     plt.xscale('log')
-    plt.xlabel('Coverage as Cumulative Probability', fontsize=13, labelpad=10)
+    plt.xlabel('Recall as Cumulative Probability', fontsize=13, labelpad=10)
     plt.ylabel(f'Precision Improvement\n(rolling window={win})', fontsize=13, labelpad=10)
     plt.tight_layout()
     plt.savefig(os.path.join(attack_path, 'pi_fl_mv_avg.png'))
@@ -307,7 +307,7 @@ def plot_move_avg(df):
     plt.figure(figsize=(10, 6))
     plt.plot(df_sorted['cdf'], df_sorted['moving_avg_frac_tar'])
     plt.xscale('log')
-    plt.xlabel('Coverage')
+    plt.xlabel('Recall')
     plt.ylabel(f'Moving Average Fraction Target Rows\n(floored at 0, window={win})')
     plt.tight_layout()
     plt.savefig(os.path.join(attack_path, 'frac_tar_mv_avg.png'))
@@ -496,7 +496,7 @@ def do_plots():
     plt.xscale('log')
     plt.hlines(0.5, 0.001, 1, colors='black', linestyles='--', linewidth=0.5)
     plt.vlines(0.001, 0.5, 1.0, colors='black', linestyles='--', linewidth=0.5)
-    plt.xlabel('Coverage (log)')
+    plt.xlabel('Recall (log)')
     plt.ylabel(f'Precision Improvement\n(floored at {pi_floor})')
     plt.legend(loc="lower left", prop={'size': 8})
     plt.tight_layout()

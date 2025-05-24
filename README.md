@@ -98,7 +98,7 @@ The columns in `results.parquet` are as follows:
 * `y_score.parquet`
 * `y_test.parquet`
 
-`command = plots`: Reads in `X_test.parquet`, creates visual plots from the models, and puts the resulting `png` and `pdf` files in `suppress_attack`.
+`command = plots`: Reads in `X_test.parquet`, creates visual plots from the models, and puts the resulting `png` and `pdf` files in `suppress_attacks`.
 
 
 ### Anonymeter style attack
