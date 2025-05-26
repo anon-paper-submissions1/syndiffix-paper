@@ -14,7 +14,7 @@ import pprint
 import sys
 
 known_target_val = 111.0
-save_results = False
+save_results = True
 if 'SDX_TEST_DIR' in os.environ:
     base_path = os.getenv('SDX_TEST_DIR')
 else:
@@ -521,6 +521,7 @@ def check_for_target_nodes_consistency(df, df_syn, forest, c0, c1, c0_supp, c0_c
     return c0_supp, c0_c1_supp_target, c0_c1_supp_victim
 
 def _run_attack(x, file_name):
+    print(f"Running attack with {x}, file_name={file_name}")
     file_path = os.path.join(tests_path, file_name)
     # use this to record results of positive and negative cases
     x['stats'] = []
@@ -528,6 +529,7 @@ def _run_attack(x, file_name):
     for this_try in range(x['samples']):
         if this_try % 1000 == 999 and save_results:
             # dump the results as json to file_path
+            print(f"Dumping results to {file_path} on try {this_try}")
             with open(file_path, 'w') as f:
                 json.dump(x, f, indent=4)
         # Use different column names with each run so as to get different noise
