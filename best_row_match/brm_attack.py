@@ -86,7 +86,7 @@ def do_attack(job_num):
             secret_column=secret_column,
             known_columns=job['known_columns'],
         )
-    print(f"Job number {job_num} FINISHED.")
+    print(f"Job number {job_num} FINISHED for attack {attack_dir_name}.")
 
 class PlotsStuff:
     def __init__(self, df: pd.DataFrame, label: str):
