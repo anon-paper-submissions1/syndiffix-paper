@@ -262,8 +262,8 @@ def make_plot():
             # 3 is the number of other c1 vals
             num_rows = 3 * tar * rows_mult
         target_size = rows_mult
-        # This would be the TP rate if we made a statistical guess
         mean = 3 + gap
+        # This would be the TP rate if we made a statistical guess
         stat_guess = 1 / tar
         tp_rate = max(1/num_tries, datum['tp'] / datum['samples'])
         fp_rate = max(1/num_tries, datum['fp'] / datum['samples'])
@@ -314,10 +314,10 @@ def make_plot():
         })
 
     df = pd.DataFrame(data)
-    df = df[~((df['sd_gap'] == 3) & (df['dim'] == 20))]
-    df = df[~((df['sd_gap'] == 4) & (df['dim'] == 20))]
+    #df = df[~((df['sd_gap'] == 3) & (df['dim'] == 20))]
+    #df = df[~((df['sd_gap'] == 4) & (df['dim'] == 20))]
 
-    print(df[['sd_gap','sd_gap','num_targets','target_size']].to_string())
+    print(df[['dim','sd_gap','num_targets','target_size']].to_string())
 
     # Make column 'marker' in df, where the marker is deterimned by the combined values of sd_gap and dim
     def assign_case(row):
@@ -338,6 +338,7 @@ def make_plot():
             sys.exit(1)
 
     df['case'] = df.apply(assign_case, axis=1)
+    print(df[['dim','sd_gap','case', 'num_targets','target_size']].to_string())
 
     # define marker map for the sd_gap, dim combinations
     marker_map = {'Mean 5, Single': 'v', 'Mean 5, Multiple': '+', 'Mean 6, Single': 'o', 'Mean 7, Single': 's'}
@@ -642,10 +643,6 @@ def run_attack(job_num=None, count_jobs=False):
                 results['low_mean_gap'] = low_mean_gap
                 results['samples'] = num_tries
                 for dim in dims:
-                    if dim == 0 and low_mean_gap != 2.0:
-                        continue
-                    if save_results is False and dim != 20:
-                        continue
                     results['dim'] = dim
                     if count_jobs is False and (job_num is None or num_jobs == job_num):
                         results['job_num'] = num_jobs
