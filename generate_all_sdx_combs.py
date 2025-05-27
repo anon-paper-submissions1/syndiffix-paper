@@ -8,6 +8,9 @@ import random
 import targets
 from syndiffix_tools.tables_manager import TablesManager
 from pathlib import Path
+import pprint
+
+pp = pprint.PrettyPrinter(indent=4)
 
 '''
 Go through all of the original datasets and define all possible combinations of columns with maxComb or fewer columns.
@@ -83,6 +86,7 @@ if DO_RANDOM_FOUR_COMBS:
         thisDataPath = Path(synDataPath, dir)
         tm = TablesManager(dir_path=thisDataPath)
         columns = list(tm.df_orig.columns)
+        pp.pprint(tm.catalog)
         combs = list(itertools.combinations(columns,4))
         # seed the random number generator with the dir name    
         random.seed(1)
