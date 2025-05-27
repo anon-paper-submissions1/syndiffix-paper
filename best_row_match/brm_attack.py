@@ -14,6 +14,7 @@ from anonymity_loss_coefficient.utils import get_good_known_column_sets
 pp = pprint.PrettyPrinter(indent=4)
 random.seed(42)
 clip_val = -0.2
+max_tables = [50, 100, 5000]
 
 if 'SDX_TEST_DIR' in os.environ:
     base_path = os.getenv('SDX_TEST_DIR')
@@ -31,8 +32,6 @@ os.makedirs(attack_path, exist_ok=True)
 jobs_path = os.path.join(attack_path, 'jobs.json')
 
 orig_files_dir = os.path.join(base_path, 'original_data_parquet')
-work_files_dir = os.path.join(attack_path, 'work_files')
-os.makedirs(work_files_dir, exist_ok=True)
 
 def do_attack(job_num):
     with open(jobs_path, 'r') as f:
@@ -50,11 +49,15 @@ def do_attack(job_num):
 
     anon_df_list = []
     anon_files = [f for f in os.listdir(anon_path) if f.endswith('.parquet')]
-    for anon_file in anon_files:
+    random.shuffle(anon_files)
+    for anon_file in anon_files[:job['max_tables']]:
         anon_df_list.append(pd.read_parquet(os.path.join(anon_path, anon_file)))
 
     attack_dir_name = f"{file_name}.{job_num}"
-    my_work_files_dir = os.path.join(work_files_dir, attack_dir_name)
+    work_files_dir_path = os.path.join(attack_path, f'work_files_{job['max_tables']}')
+    os.makedirs(work_files_dir_path, exist_ok=True)
+
+    my_work_files_dir = os.path.join(work_files_dir_path, attack_dir_name)
     test_file_path = os.path.join(my_work_files_dir, 'summary_secret_known.csv')
     if os.path.exists(test_file_path):
         print(f"File {test_file_path} already exists. Skipping this job.")
@@ -67,25 +70,10 @@ def do_attack(job_num):
                     attack_name = attack_dir_name,
                     no_counter=True,
                     )
-    if False:
-        # for debugging
-        brm.run_one_attack(
-            secret_column='n_unique_tokens',
-            known_columns=['n_tokens_title', 'n_tokens_content',],
-        )
-        quit()
-    # get all columns in df_orig.columns but not in job['known_columns']
-    secret_columns = [c for c in df_orig.columns if c not in job['known_columns']]
-    random.shuffle(secret_columns)
-    print(f"Secret columns: {secret_columns}")
-    print(f"Known columns: {job['known_columns']}")
-    # Select 5 random secret columns for the attacks
-    for secret_column in secret_columns[:5]:
-        print(f"Running attack for {secret_column}...")
-        brm.run_one_attack(
-            secret_column=secret_column,
-            known_columns=job['known_columns'],
-        )
+    brm.run_one_attack(
+        secret_column=job['secret_column'],
+        known_columns=job['known_columns'],
+    )
     print(f"Job number {job_num} FINISHED for attack {attack_dir_name}.")
 
 class PlotsStuff:
@@ -715,13 +703,13 @@ def plot_alc_unpaired_vs_one(ps, strength):
     plt.savefig(os.path.join(plots_dir, f'recalls_box_{strength}.pdf'))
     plt.close()
 
-def do_gather():
-    out_name = 'all_secret_known.parquet'
+def do_gather(work_files_dir_path, max_tables):
+    out_name = f'all_secret_known_{max_tables}.parquet'
     # List to store dataframes
     dataframes = []
     
     # Recursively walk through the directory
-    for root, _, files in os.walk(work_files_dir):
+    for root, _, files in os.walk(work_files_dir_path):
         for file in files:
             if file == "summary_secret_known.csv":
                 file_path = os.path.join(root, file)
@@ -761,7 +749,8 @@ def do_config():
         for secret_column in columns[:10]:
             # make a list with all columns except column
             other_columns = [c for c in df_orig.columns if c != secret_column]
-            jobs.append({"approach": "ours", "dataset": file_name, "known_columns": other_columns, "secret_column": secret_column})
+            for max_table in max_tables:
+                jobs.append({"approach": "ours", "dataset": file_name, "known_columns": other_columns, "secret_column": secret_column, "max_tables": max_table})
 
         # Next populate with 25 random known column pairs
         all_column_pairs = list(itertools.combinations(df_orig.columns, 2))
@@ -773,7 +762,9 @@ def do_config():
             secret_columns = [c for c in columns if c not in known_column_pair]
             for secret_column in secret_columns[:5]:
                 # make a list with all columns except known_column_pair
-                jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_pair, "secret_column": secret_column})
+                for max_table in max_tables:
+                    # add the job with max_table
+                    jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_pair, "secret_column": secret_column, "max_tables": max_table})
 
         # Next populate with 25 random known column 3-column sets
         all_column_triples = list(itertools.combinations(df_orig.columns, 3))
@@ -784,7 +775,8 @@ def do_config():
             secret_columns = [c for c in columns if c not in known_column_triple]
             for secret_column in secret_columns[:5]:
                 # make a list with all columns except known_column_triple
-                jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_triple, "secret_column": secret_column})
+                for max_table in max_tables:
+                    jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_triple, "secret_column": secret_column, "max_tables": max_table})
         
         # Finally, populate with attackable (because of uniques) known column sets
         known_column_sets = get_good_known_column_sets(df_orig, list(df_orig.columns), max_sets=100)
@@ -793,8 +785,8 @@ def do_config():
             random.shuffle(columns)
             secret_columns = [c for c in columns if c not in column_set]
             for secret_column in secret_columns[:5]:
-                # make a list with all columns except column_set
-                jobs.append({"approach": "ours", "dataset": file_name, "known_columns": column_set, "secret_column": secret_column})
+                for max_table in max_tables:
+                    jobs.append({"approach": "ours", "dataset": file_name, "known_columns": column_set, "secret_column": secret_column, "max_tables": max_table})
     random.shuffle(jobs)
     num_known = [0 for _ in range(20)]
     for job in jobs:
@@ -848,7 +840,9 @@ def main():
     elif args.command == "plot":
         do_plots()
     elif args.command == "gather":
-        do_gather()
+        for max_table in max_tables:
+            print(f"Gathering work files for max_table={max_table}")
+            do_gather(os.path.join(attack_path, f'work_files_{max_table}'), max_table)
     elif args.command == "config":
         do_config()
 

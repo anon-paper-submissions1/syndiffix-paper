@@ -16,11 +16,13 @@ Run `csv_prep.py`. This creates `SDX_TEST_DIR/original_data_parquet` and populat
 
 ### SynDiffix prep
 
+Run `populate_directories.py` to create the directories for the syndiffix files in `SynDatasets`.
+
 Run `generate_all_sdx_combs.py`. This creates the file:
 * `SDX_TEST_DIR/allSynCombs.json`, which contains the information needed to create every synthetic dataset, and
 * `slurmGenSdx`, which is the slurm shell script needed to create the synthetic datasets
 
-Run `sbatch slurmGenSdx`. This creates all of the SynDiffix synthetic datasets needed for our tests. This will consist of all 1dim, 2dim, and 3dim combinations of all of the test datasets.
+Run `sbatch slurmGenSdx`. This creates all of the SynDiffix synthetic datasets needed for our tests. This will consist of all 1dim, 2dim, and 3dim, and some 4dim combinations of all of the test datasets.
 
 # Attacks
 
