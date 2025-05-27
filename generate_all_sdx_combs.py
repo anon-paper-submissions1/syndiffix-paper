@@ -78,6 +78,7 @@ if DO_RANDOM_FOUR_COMBS:
         fourCombs[dir] = []
         thisDataPath = Path(synDataPath, dir)
         tm = TablesManager(dir_path=thisDataPath)
+        pp.pprint(tm.catalog)
         if len(tm.get_pid_cols()) > 0:
             continue
         numFourCombDatasets += 1
@@ -86,7 +87,6 @@ if DO_RANDOM_FOUR_COMBS:
         thisDataPath = Path(synDataPath, dir)
         tm = TablesManager(dir_path=thisDataPath)
         columns = list(tm.df_orig.columns)
-        pp.pprint(tm.catalog)
         combs = list(itertools.combinations(columns,4))
         # seed the random number generator with the dir name    
         random.seed(1)
