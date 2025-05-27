@@ -146,36 +146,20 @@ class PlotsStuff:
 def do_plots():
     # Read the parquet files into dataframes
     try:
-        df_ours_weak = pd.read_parquet(f"all_secret_known_weak.parquet")
-        df_ours_strong = pd.read_parquet(f"all_secret_known_strong.parquet")
-        df_prior_weak = pd.read_parquet(f"all_secret_known_prior_weak.parquet")
-        df_prior_strong = pd.read_parquet(f"all_secret_known_prior_strong.parquet")
+        df = pd.read_parquet(f"all_secret_known_weak")
     except Exception as e:
         print(f"Error reading parquet files: {e}")
         return
 
-    ps_ours_weak = PlotsStuff(df_ours_weak, 'ours_weak')
-    ps_ours_strong = PlotsStuff(df_ours_strong, 'ours_strong')
-    ps_prior_weak = PlotsStuff(df_prior_weak, 'prior_weak')
-    ps_prior_strong = PlotsStuff(df_prior_strong, 'prior_strong')
+    ps = PlotsStuff(df, '')
 
-    ps_ours_weak.describe()
-    ps_ours_strong.describe()
-    ps_prior_weak.describe()
-    ps_prior_strong.describe()
+    ps.describe()
 
-    print("Difference in computation time, ours vs prior:")
-    print("   Ours weak:")
-    print(ps_ours_weak.df['elapsed_time'].describe())
-    print("   Prior weak:")
-    print(ps_prior_weak.df['elapsed_time'].describe())
-    print("   Ours strong:")
-    print(ps_ours_strong.df['elapsed_time'].describe())
-    print("   Prior strong:")
-    print(ps_prior_strong.df['elapsed_time'].describe())
+    print("computation time:")
+    print(ps.df['elapsed_time'].describe())
 
     #plot_prior_versus_ours(ps_ours_weak, ps_prior_weak, 'weak')
-    plot_alc_unpaired_vs_one(ps_ours_strong, 'strong')
+    plot_alc_unpaired_vs_one(ps, 'strong')
     plot_alc_unpaired_vs_one(ps_ours_weak, 'weak')
     plot_recall_boxes(ps_ours_weak, ps_ours_strong, 'ours')
     plot_recall_boxes(ps_prior_weak, ps_prior_strong, 'prior')
@@ -812,6 +796,13 @@ def do_config():
                 # make a list with all columns except column_set
                 jobs.append({"approach": "ours", "dataset": file_name, "known_columns": column_set, "secret_column": secret_column})
     random.shuffle(jobs)
+    num_known = [0 for _ in range(20)]
+    for job in jobs:
+        num_known[len(job['known_columns'])] += 1
+    print("Number of jobs per known columns:")
+    for i, num in enumerate(num_known):
+        print(f"{i} known columns: {num} jobs")
+
     for i, job in enumerate(jobs):
         job['job_num'] = i
     # save jobs to a json file
