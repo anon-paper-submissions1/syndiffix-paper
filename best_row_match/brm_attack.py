@@ -798,7 +798,10 @@ def do_config():
     random.shuffle(jobs)
     num_known = [0 for _ in range(20)]
     for job in jobs:
-        num_known[len(job['known_columns'])] += 1
+        if len(job['known_columns']) >= len(num_known):
+            num_known[0] += 1
+        else:
+            num_known[len(job['known_columns'])] += 1
     print("Number of jobs per known columns:")
     for i, num in enumerate(num_known):
         print(f"{i} known columns: {num} jobs")
