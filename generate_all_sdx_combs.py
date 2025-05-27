@@ -78,6 +78,7 @@ if DO_RANDOM_FOUR_COMBS:
         fourCombs[dir] = []
         thisDataPath = Path(synDataPath, dir)
         tm = TablesManager(dir_path=thisDataPath)
+        tm.build_catalog()
         pp.pprint(tm.catalog)
         if len(tm.get_pid_cols()) > 0:
             continue
