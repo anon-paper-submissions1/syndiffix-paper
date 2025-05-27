@@ -772,28 +772,45 @@ def do_config():
         df_orig = pd.read_parquet(os.path.join(orig_files_dir, file_name))
         print(f"Get known column sets for {file_name}")
         # First populate with the cases where all columns are known
-        for column in df_orig.columns:
+        columns = list(df_orig.columns)
+        random.shuffle(columns)
+        for secret_column in columns[:10]:
             # make a list with all columns except column
-            other_columns = [c for c in df_orig.columns if c != column]
-            jobs.append({"approach": "ours", "dataset": file_name, "known_columns": other_columns})
+            other_columns = [c for c in df_orig.columns if c != secret_column]
+            jobs.append({"approach": "ours", "dataset": file_name, "known_columns": other_columns, "secret_column": secret_column})
 
         # Next populate with 25 random known column pairs
         all_column_pairs = list(itertools.combinations(df_orig.columns, 2))
         random.shuffle(all_column_pairs)
         for known_column_pair in all_column_pairs[:25]:
-            jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_pair})
+            # randomly select 5 secret columns that are not in known_column_pair
+            columns = list(df_orig.columns)
+            random.shuffle(columns)
+            secret_columns = [c for c in columns if c not in known_column_pair]
+            for secret_column in secret_columns[:5]:
+                # make a list with all columns except known_column_pair
+                jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_pair, "secret_column": secret_column})
 
         # Next populate with 25 random known column 3-column sets
         all_column_triples = list(itertools.combinations(df_orig.columns, 3))
         random.shuffle(all_column_triples)
         for known_column_triple in all_column_triples[:25]:
-            jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_triple})
+            columns = list(df_orig.columns)
+            random.shuffle(columns)
+            secret_columns = [c for c in columns if c not in known_column_triple]
+            for secret_column in secret_columns[:5]:
+                # make a list with all columns except known_column_triple
+                jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_triple, "secret_column": secret_column})
         
         # Finally, populate with attackable (because of uniques) known column sets
-        known_column_sets = get_good_known_column_sets(df_orig, list(df_orig.columns), max_sets=200)
+        known_column_sets = get_good_known_column_sets(df_orig, list(df_orig.columns), max_sets=100)
         for column_set in known_column_sets:
-            # make a list with all columns except column_set
-            jobs.append({"approach": "ours", "dataset": file_name, "known_columns": list(column_set)})
+            columns = list(df_orig.columns)
+            random.shuffle(columns)
+            secret_columns = [c for c in columns if c not in column_set]
+            for secret_column in secret_columns[:5]:
+                # make a list with all columns except column_set
+                jobs.append({"approach": "ours", "dataset": file_name, "known_columns": column_set, "secret_column": secret_column})
     random.shuffle(jobs)
     for i, job in enumerate(jobs):
         job['job_num'] = i
