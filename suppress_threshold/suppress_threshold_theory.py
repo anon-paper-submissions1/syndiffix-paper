@@ -189,7 +189,7 @@ def alc_plot(df_orig, alc_col):
     plot_data = pd.DataFrame()
 
     # Iterate over each column and its distinct values
-    cases = ['Mean 5, Single', 'Mean 5, Multiple', 'Mean 6, Single', 'Mean 7, Single']
+    cases = ['Mean 5, Single', 'Mean 5, Multiple', 'Mean 6, Single', 'Mean 6, Multiple', 'Mean 7, Single', 'Mean 7, Multiple']
     for case in cases:
         filtered_df = df[df['case'] == case].copy()
         filtered_df['label'] = case

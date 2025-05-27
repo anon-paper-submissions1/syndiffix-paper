@@ -731,13 +731,8 @@ def plot_alc_unpaired_vs_one(ps, strength):
     plt.savefig(os.path.join(plots_dir, f'recalls_box_{strength}.pdf'))
     plt.close()
 
-def do_gather(measure_type, strength):
-    print(f"Gathering files for {measure_type}, strength {strength}...")
-    work_files_dir = os.path.join(f'work_files_{strength}')
-    out_name = f'all_secret_known_{strength}.parquet'
-    if measure_type == 'prior_measure':
-        work_files_dir = os.path.join(f'work_files_prior_{strength}')
-        out_name = f'all_secret_known_prior_{strength}.parquet'
+def do_gather():
+    out_name = 'all_secret_known.parquet'
     # List to store dataframes
     dataframes = []
     
@@ -842,10 +837,7 @@ def main():
     elif args.command == "plot":
         do_plots()
     elif args.command == "gather":
-        do_gather('measure', 'strong')
-        do_gather('prior_measure', 'strong')
-        do_gather('measure', 'weak')
-        do_gather('prior_measure', 'weak')
+        do_gather()
     elif args.command == "config":
         do_config()
 
