@@ -6,7 +6,7 @@ from syndiffix_tools.tables_manager import TablesManager
 import my_utilities as mu
 
 baseDir = os.environ['SDX_TEST_DIR']
-# make sinDatasetsDir using Path
+# make synDatasetsDir using Path
 synDatasetsDir = Path(baseDir, 'synDatasets')
 os.makedirs(synDatasetsDir, exist_ok=True)
 jobsFile = 'allSynCombs.json'
