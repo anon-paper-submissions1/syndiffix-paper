@@ -217,11 +217,11 @@ def do_config():
         all_column_pairs = list(itertools.combinations(df_orig.columns, 2))
         random.shuffle(all_column_pairs)
         for known_column_pair in all_column_pairs[:5]:
-            # randomly select 5 secret columns that are not in known_column_pair
+            # randomly select 3 secret columns that are not in known_column_pair
             columns = list(df_orig.columns)
             random.shuffle(columns)
             secret_columns = [c for c in columns if c not in known_column_pair]
-            for secret_column in secret_columns[:5]:
+            for secret_column in secret_columns[:3]:
                 # make a list with all columns except known_column_pair
                 num_attackable = num_attackable_tables(anon_cols_list, known_column_pair, secret_column)
                 for max_table in max_tables:
@@ -238,7 +238,7 @@ def do_config():
             columns = list(df_orig.columns)
             random.shuffle(columns)
             secret_columns = [c for c in columns if c not in known_column_triple]
-            for secret_column in secret_columns[:5]:
+            for secret_column in secret_columns[:3]:
                 # make a list with all columns except known_column_triple
                 num_attackable = num_attackable_tables(anon_cols_list, known_column_triple, secret_column)
                 for max_table in max_tables:
