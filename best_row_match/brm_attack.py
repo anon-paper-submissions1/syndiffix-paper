@@ -197,6 +197,8 @@ def do_config():
         for anon_file in anon_files:
             df = pd.read_parquet(os.path.join(anon_path, anon_file))
             anon_cols_list.append(df.columns.tolist())
+        print(anon_cols_list)
+        quit()
 
         num_attackable = num_attackable_tables(anon_cols_list, list(df_orig.columns), 'secret_column')
         print(f"    {file_name_prefix} has {num_attackable} attackable tables.")
