@@ -184,10 +184,10 @@ def do_config():
             for max_table in max_tables:
                 jobs.append({"approach": "ours", "dataset": file_name, "known_columns": other_columns, "secret_column": secret_column, "max_tables": max_table})
 
-        # Next populate with 25 random known column pairs
+        # Next populate with 5 random known column pairs
         all_column_pairs = list(itertools.combinations(df_orig.columns, 2))
         random.shuffle(all_column_pairs)
-        for known_column_pair in all_column_pairs[:25]:
+        for known_column_pair in all_column_pairs[:5]:
             # randomly select 5 secret columns that are not in known_column_pair
             columns = list(df_orig.columns)
             random.shuffle(columns)
@@ -198,10 +198,10 @@ def do_config():
                     # add the job with max_table
                     jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_pair, "secret_column": secret_column, "max_tables": max_table})
 
-        # Next populate with 25 random known column 3-column sets
+        # Next populate with 5 random known column 3-column sets
         all_column_triples = list(itertools.combinations(df_orig.columns, 3))
         random.shuffle(all_column_triples)
-        for known_column_triple in all_column_triples[:25]:
+        for known_column_triple in all_column_triples[:5]:
             columns = list(df_orig.columns)
             random.shuffle(columns)
             secret_columns = [c for c in columns if c not in known_column_triple]
