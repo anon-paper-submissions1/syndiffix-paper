@@ -188,9 +188,10 @@ def do_config():
     for file_name in files_list:
         # read in the file
         df_orig = pd.read_parquet(os.path.join(orig_files_dir, file_name))
+        file_name_prefix = file_name.split('.')[0]
 
-        print(f"Read in anon files for {file_name}")
-        anon_path = os.path.join(syn_path, file_name, 'syn')
+        print(f"Read in anon files for {file_name_prefix}")
+        anon_path = os.path.join(syn_path, file_name_prefix, 'syn')
         anon_cols_list = []
         anon_files = [f for f in os.listdir(anon_path) if f.endswith('.parquet')]
         for anon_file in anon_files:
@@ -198,7 +199,7 @@ def do_config():
             anon_cols_list.append(df.columns.tolist())
 
         num_attackable = num_attackable_tables(anon_cols_list, list(df_orig.columns), 'secret_column')
-        print(f"    {file_name} has {num_attackable} attackable tables.")
+        print(f"    {file_name_prefix} has {num_attackable} attackable tables.")
 
         # First populate with the cases where all columns are known
         columns = list(df_orig.columns)
@@ -247,7 +248,7 @@ def do_config():
                         break
         
         # Finally, populate with attackable (because of uniques) known column sets
-        print(f"    Finding good known column sets for {file_name}")
+        print(f"    Finding good known column sets for {file_name_prefix}")
         known_column_sets = get_good_known_column_sets(df_orig, list(df_orig.columns), max_sets=100)
         for column_set in known_column_sets:
             columns = list(df_orig.columns)
