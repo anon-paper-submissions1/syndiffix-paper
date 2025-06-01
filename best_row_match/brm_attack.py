@@ -206,8 +206,6 @@ def do_config():
             # make a list with all columns except column
             other_columns = [c for c in df_orig.columns if c != secret_column]
             num_attackable = num_attackable_tables(anon_cols_list, other_columns, secret_column)
-            print(f"    {file_name_prefix} has {num_attackable} attackable tables with all columns known and secret column {secret_column}.")
-            quit()
             for max_table in max_tables:
                 if max_table < num_attackable:
                     jobs.append({"approach": "ours", "dataset": file_name, "known_columns": other_columns, "secret_column": secret_column, "max_tables": max_table})
