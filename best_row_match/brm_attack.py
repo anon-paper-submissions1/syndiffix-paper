@@ -213,42 +213,7 @@ def do_config():
                     jobs.append({"approach": "ours", "dataset": file_name, "known_columns": other_columns, "secret_column": secret_column, "max_tables": num_attackable})
                     break
 
-        # Next populate with 3 random known column pairs
-        all_column_pairs = list(itertools.combinations(df_orig.columns, 2))
-        random.shuffle(all_column_pairs)
-        for known_column_pair in all_column_pairs[:0]:
-            # randomly select 3 secret columns that are not in known_column_pair
-            columns = list(df_orig.columns)
-            random.shuffle(columns)
-            secret_columns = [c for c in columns if c not in known_column_pair]
-            for secret_column in secret_columns[:3]:
-                # make a list with all columns except known_column_pair
-                num_attackable = num_attackable_tables(anon_cols_list, known_column_pair, secret_column)
-                for max_table in max_tables:
-                    if max_table < num_attackable:
-                        jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_pair, "secret_column": secret_column, "max_tables": max_table})
-                    else:
-                        jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_pair, "secret_column": secret_column, "max_tables": num_attackable})
-                        break
-
-        # Next populate with 3 random known column 3-column sets
-        all_column_triples = list(itertools.combinations(df_orig.columns, 3))
-        random.shuffle(all_column_triples)
-        for known_column_triple in all_column_triples[:0]:
-            columns = list(df_orig.columns)
-            random.shuffle(columns)
-            secret_columns = [c for c in columns if c not in known_column_triple]
-            for secret_column in secret_columns[:3]:
-                # make a list with all columns except known_column_triple
-                num_attackable = num_attackable_tables(anon_cols_list, known_column_triple, secret_column)
-                for max_table in max_tables:
-                    if max_table < num_attackable:
-                        jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_triple, "secret_column": secret_column, "max_tables": max_table})
-                    else:
-                        jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_triple, "secret_column": secret_column, "max_tables": num_attackable})
-                        break
-        
-        # Finally, populate with attackable (because of uniques) known column sets
+        # Populate with attackable (because of uniques) known column sets
         print(f"    Finding good known column sets for {file_name_prefix}")
         known_column_sets = get_good_known_column_sets(df_orig, list(df_orig.columns), max_sets=100)
         for column_set in known_column_sets:
