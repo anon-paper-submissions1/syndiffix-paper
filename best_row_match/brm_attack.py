@@ -200,8 +200,7 @@ def do_config():
         print(anon_cols_list)
         quit()
 
-        num_attackable = num_attackable_tables(anon_cols_list, list(df_orig.columns), 'secret_column')
-        print(f"    {file_name_prefix} has {num_attackable} attackable tables.")
+        print(f"    {file_name_prefix} has {len(anon_cols_list)} tables.")
 
         # First populate with the cases where all columns are known
         columns = list(df_orig.columns)
@@ -209,6 +208,9 @@ def do_config():
         for secret_column in columns[:10]:
             # make a list with all columns except column
             other_columns = [c for c in df_orig.columns if c != secret_column]
+            num_attackable = num_attackable_tables(anon_cols_list, other_columns, secret_column)
+            print(f"    {file_name_prefix} has {num_attackable} attackable tables with all columns known and secret column {secret_column}.")
+            quit()
             for max_table in max_tables:
                 if max_table < num_attackable:
                     jobs.append({"approach": "ours", "dataset": file_name, "known_columns": other_columns, "secret_column": secret_column, "max_tables": max_table})
@@ -226,6 +228,7 @@ def do_config():
             secret_columns = [c for c in columns if c not in known_column_pair]
             for secret_column in secret_columns[:5]:
                 # make a list with all columns except known_column_pair
+                num_attackable = num_attackable_tables(anon_cols_list, known_column_pair, secret_column)
                 for max_table in max_tables:
                     if max_table < num_attackable:
                         jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_pair, "secret_column": secret_column, "max_tables": max_table})
@@ -242,6 +245,7 @@ def do_config():
             secret_columns = [c for c in columns if c not in known_column_triple]
             for secret_column in secret_columns[:5]:
                 # make a list with all columns except known_column_triple
+                num_attackable = num_attackable_tables(anon_cols_list, known_column_triple, secret_column)
                 for max_table in max_tables:
                     if max_table < num_attackable:
                         jobs.append({"approach": "ours", "dataset": file_name, "known_columns": known_column_triple, "secret_column": secret_column, "max_tables": max_table})
@@ -257,6 +261,7 @@ def do_config():
             random.shuffle(columns)
             secret_columns = [c for c in columns if c not in column_set]
             for secret_column in secret_columns[:5]:
+                num_attackable = num_attackable_tables(anon_cols_list, column_set, secret_column)
                 for max_table in max_tables:
                     if max_table < num_attackable:
                         jobs.append({"approach": "ours", "dataset": file_name, "known_columns": column_set, "secret_column": secret_column, "max_tables": max_table})
