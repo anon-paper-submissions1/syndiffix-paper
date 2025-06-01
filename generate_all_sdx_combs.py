@@ -86,15 +86,6 @@ if DO_RANDOM_FOUR_COMBS:
         thisDataPath = Path(synDataPath, dir)
         tm = TablesManager(dir_path=thisDataPath)
         columns = list(tm.df_orig.columns)
-        tm.build_catalog()
-        thisNumFourCombs = 0
-        for entry in tm.catalog:
-            if len(entry['columns']) == 4:
-                thisNumFourCombs += 1
-        numNewCombs = initialCount - thisNumFourCombs
-        if numNewCombs <= 0:
-            print(f"Already have {thisNumFourCombs} 4-col tables for {dir}, skipping")
-            continue
         combs = list(itertools.combinations(columns,4))
         # seed the random number generator with the dir name    
         random.seed(1)
