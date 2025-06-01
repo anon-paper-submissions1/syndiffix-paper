@@ -197,11 +197,8 @@ def do_config():
         for anon_file in anon_files:
             df = pd.read_parquet(os.path.join(anon_path, anon_file))
             anon_cols_list.append(df.columns.tolist())
-        print(anon_cols_list)
-        quit()
 
         print(f"    {file_name_prefix} has {len(anon_cols_list)} tables.")
-
         # First populate with the cases where all columns are known
         columns = list(df_orig.columns)
         random.shuffle(columns)
