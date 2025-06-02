@@ -10,6 +10,10 @@ import pprint
 import itertools
 from anonymity_loss_coefficient import BrmAttack
 from anonymity_loss_coefficient.utils import get_good_known_column_sets
+import psutil
+import tracemalloc
+
+mem_threshold = 5
 
 pp = pprint.PrettyPrinter(indent=4)
 random.seed(42)
@@ -37,6 +41,11 @@ plots_dir = os.path.join(attack_path, 'plots')
 orig_files_dir = os.path.join(base_path, 'original_data_parquet')
 
 def do_attack(job_num):
+    process = psutil.Process(os.getpid())
+    if mem_threshold > 0:
+        print("Starting memory check")
+        tracemalloc.start(25)
+
     with open(jobs_path, 'r') as f:
         jobs = json.load(f)
     # get the job from the jobs list
@@ -53,6 +62,18 @@ def do_attack(job_num):
     anon_df_list = []
     anon_files = [f for f in os.listdir(anon_path) if f.endswith('.parquet')]
     for anon_file in anon_files:
+        mem_bytes = process.memory_info().rss
+        print(f"Memory usage: {mem_bytes / (1024 * 1024):.2f} MB")
+        if mem_bytes >= mem_threshold * 1024 ** 3:  # GB
+            print(f"Memory usage is {mem_threshold}GB or more")
+            snapshot = tracemalloc.take_snapshot()
+            top_stats = snapshot.statistics('traceback')
+            for stat in top_stats[:5]:
+                print("Traceback (most recent call last):")
+                for line in stat.traceback.format():
+                    print(line)
+                print(f"{stat.size / 1024:.1f} KiB allocated\n")
+            quit()
         anon_df_list.append(pd.read_parquet(os.path.join(anon_path, anon_file)))
 
     attack_dir_name = f"{file_name}.{job_num}"
