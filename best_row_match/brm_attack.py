@@ -13,7 +13,7 @@ from anonymity_loss_coefficient.utils import get_good_known_column_sets
 import psutil
 import tracemalloc
 
-mem_threshold = 5
+mem_threshold = 25
 
 pp = pprint.PrettyPrinter(indent=4)
 random.seed(42)
