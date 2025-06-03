@@ -9,7 +9,7 @@ import seaborn as sns
 import pprint
 import itertools
 from anonymity_loss_coefficient import BrmAttack
-from anonymity_loss_coefficient.utils import get_good_known_column_sets, read_table
+from anonymity_loss_coefficient.utils import get_good_known_column_sets, prepare_anon_list
 
 pp = pprint.PrettyPrinter(indent=4)
 random.seed(42)
@@ -49,11 +49,7 @@ def do_attack(job_num):
     df_orig = pd.read_parquet(os.path.join(orig_files_dir, job['dataset']))
     file_name = job['dataset'].split('.')[0]
     anon_path = os.path.join(syn_path, file_name, 'syn')
-
-    anon_df_list = []
-    anon_files = [f for f in os.listdir(anon_path) if f.endswith('.parquet')]
-    for anon_file in anon_files:
-        anon_df_list.append(read_table(os.path.join(anon_path, anon_file)))
+    anon_df_list = prepare_anon_list(anon_path, job['secret_column'], job['known_columns'])
 
     attack_dir_name = f"{file_name}.{job_num}"
 
