@@ -9,11 +9,11 @@ import seaborn as sns
 import pprint
 import itertools
 from anonymity_loss_coefficient import BrmAttack
-from anonymity_loss_coefficient.utils import get_good_known_column_sets
+from anonymity_loss_coefficient.utils import get_good_known_column_sets, read_table
 import psutil
 import tracemalloc
 
-mem_threshold = 25
+mem_threshold = 0 # in GB, set to 0 to disable memory check
 
 pp = pprint.PrettyPrinter(indent=4)
 random.seed(42)
@@ -74,7 +74,7 @@ def do_attack(job_num):
                     print(line)
                 print(f"{stat.size / 1024:.1f} KiB allocated\n")
             quit()
-        anon_df_list.append(pd.read_parquet(os.path.join(anon_path, anon_file)))
+        anon_df_list.append(read_table(os.path.join(anon_path, anon_file)))
 
     attack_dir_name = f"{file_name}.{job_num}"
 
