@@ -46,18 +46,19 @@ def do_attack(job_num):
     job = jobs[job_num]
     print(f"Job number {job_num} started.")
     pp.pprint(job)
-    df_orig = pd.read_parquet(os.path.join(orig_files_dir, job['dataset']))
     file_name = job['dataset'].split('.')[0]
-    anon_path = os.path.join(syn_path, file_name, 'syn')
-    anon_df_list = prepare_anon_list(anon_path, job['secret_column'], job['known_columns'])
-
     attack_dir_name = f"{file_name}.{job_num}"
-
     my_work_files_dir = os.path.join(work_files_dir_path, attack_dir_name)
     test_file_path = os.path.join(my_work_files_dir, 'summary_secret_known.csv')
     if os.path.exists(test_file_path):
         print(f"File {test_file_path} already exists. Skipping this job.")
         return
+
+    df_orig = pd.read_parquet(os.path.join(orig_files_dir, job['dataset']))
+    anon_path = os.path.join(syn_path, file_name, 'syn')
+    anon_df_list, num_skipped = prepare_anon_list(anon_path, job['secret_column'], job['known_columns'])
+    print(f"Prepared {len(anon_df_list)} anonymized dataset, skipped {num_skipped} datasets that did not have the secret column or known columns.")
+
     os.makedirs(my_work_files_dir, exist_ok=True)
 
     brm = BrmAttack(df_original=df_orig,
