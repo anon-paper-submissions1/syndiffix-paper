@@ -284,9 +284,7 @@ def main():
     elif args.command == "plot":
         do_plots()
     elif args.command == "gather":
-        for max_table in max_tables:
-            print(f"Gathering work files for max_table={max_table}")
-            do_gather()
+        do_gather()
     elif args.command == "config":
         do_config()
 
