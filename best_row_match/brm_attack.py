@@ -138,11 +138,14 @@ def do_gather():
     dataframes = []
     
     # Recursively walk through the directory
+    counter = 0
+    print(f"Gathering files from {work_files_dir_path}")
     for root, _, files in os.walk(work_files_dir_path):
         for file in files:
             if file == "summary_secret_known.csv":
                 file_path = os.path.join(root, file)
-                print(f"Reading file: {file_path}")
+                if counter % 100 == 0:
+                    print(f"Read {counter} files")
                 try:
                     df = pd.read_csv(file_path)
                 except Exception as e:
