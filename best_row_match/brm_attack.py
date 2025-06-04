@@ -143,8 +143,9 @@ def do_gather():
     for root, _, files in os.walk(work_files_dir_path):
         for file in files:
             if file == "summary_secret_known.csv":
+                counter += 1
                 file_path = os.path.join(root, file)
-                if counter % 100 == 0:
+                if counter % 1000 == 0:
                     print(f"Read {counter} files")
                 try:
                     df = pd.read_csv(file_path)
