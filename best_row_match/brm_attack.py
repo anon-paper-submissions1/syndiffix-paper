@@ -7,7 +7,6 @@ import random
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pprint
-import itertools
 from anonymity_loss_coefficient import BrmAttack
 from anonymity_loss_coefficient.utils import get_good_known_column_sets, prepare_anon_list
 
@@ -33,6 +32,7 @@ jobs_path = os.path.join(attack_path, 'jobs.json')
 work_files_dir_path = os.path.join(attack_path, 'work_files')
 os.makedirs(work_files_dir_path, exist_ok=True)
 plots_dir = os.path.join(attack_path, 'plots')
+summary_data_file = f'all_secret_known.parquet'
 
 orig_files_dir = os.path.join(base_path, 'original_data_parquet')
 
@@ -129,11 +129,199 @@ class PlotsStuff:
         print(self.df_one['alc'].describe())
         print(f"Num and frac clipped: {self.one_clipped} ({self.one_clipped_frac})")
 
+def save_plot(plt, name):
+    plot_path_png = os.path.join(plots_dir, f"{name}.png")
+    plot_path_pdf = os.path.join(plots_dir, f"{name}.pdf")
+    os.makedirs(plots_dir, exist_ok=True)
+    plt.savefig(plot_path_png, bbox_inches='tight')
+    plt.savefig(plot_path_pdf, bbox_inches='tight')
+    plt.close()
+
+def plot_num_datasets(df):
+    """
+    Plots atk_max_num_anon_datasets (y-axis) vs. index (x-axis) after sorting df by atk_max_num_anon_datasets ascending.
+    """
+    df_sorted = df.sort_values('atk_max_num_anon_datasets', ascending=True).reset_index(drop=True)
+    plt.figure(figsize=(8, 5))
+    plt.plot(df_sorted.index, df_sorted['atk_max_num_anon_datasets'], marker='o', linestyle='-')
+    plt.xlabel('Index (sorted)')
+    plt.ylabel('atk_max_num_anon_datasets')
+    plt.yscale('log')
+    plt.title('atk_max_num_anon_datasets vs. Sorted Index')
+    plt.tight_layout()
+    save_plot(plt, 'num_datasets')
+
+def plot_alc_per_max_table_bins(df):
+    """
+    Creates a horizontal boxplot of 'alc' for each bin of 'atk_max_num_anon_datasets'.
+    The x-axis is 'alc', the y-axis is the binned 'atk_max_num_anon_datasets', ordered as specified.
+    The y-tick labels include the bin label and the count of datapoints in each bin.
+    For each boxplot, adds a right-justified label showing the count and percent of points with alc >= 0.75.
+    """
+    import numpy as np
+
+    # Define bins and labels
+    bins = [1, 2, 20, 50, 100, 200, 1000]
+    labels = ['1', '[2,20]', '[21,50]', '[51,100]', '[101,200]', '[201,1000]']
+    
+    # Bin the atk_max_num_anon_datasets column
+    df = df.copy()
+    df['atk_max_num_anon_datasets_bin'] = pd.cut(
+        df['atk_max_num_anon_datasets'],
+        bins=bins,
+        labels=labels,
+        right=True,
+        include_lowest=True
+    )
+    
+    # Count the number of datapoints in each bin
+    bin_counts = df['atk_max_num_anon_datasets_bin'].value_counts().reindex(labels, fill_value=0)
+    yticklabels = [f"{label}\n({count})" for label, count in zip(labels, bin_counts)]
+    
+    plt.figure(figsize=(5, 3))
+    ax = sns.boxplot(
+        data=df,
+        x='alc',
+        y='atk_max_num_anon_datasets_bin',
+        order=labels,
+        orient='h'
+    )
+    ax.set_yticklabels(yticklabels)
+    plt.xlabel('ALC')
+    plt.ylabel('[Number of Datasets] (count)')
+    ax.axvline(x=0, color='black', linestyle='--', linewidth=1)
+    ax.axvline(x=0.5, color='green', linestyle='--', linewidth=1)
+    ax.axvline(x=0.75, color='red', linestyle='--', linewidth=1)
+    plt.tight_layout()
+
+    # Add right-justified text labels for each boxplot
+    xlim = ax.get_xlim()
+    x_right = xlim[1]
+    for i, label in enumerate(labels):
+        bin_df = df[df['atk_max_num_anon_datasets_bin'] == label]
+        total = len(bin_df)
+        cnt = (bin_df['alc'] >= 0.75).sum()
+        val = 0 if total == 0 else round(100 * cnt / total, 1)
+        text = f"{cnt} ({val}%)"
+        # Get the y position for this boxplot
+        # In seaborn, y-ticks are at positions 0, 1, ..., len(labels)-1 from top to bottom
+        ytick_pos = i
+        # Place text just above the boxplot axis
+        ax.text(
+            x_right, ytick_pos - 0.14,
+            text,
+            ha='right',
+            va='bottom',
+            fontsize=9,
+            color='black',
+            clip_on=False
+        )
+    save_plot(plt, 'alc_per_max_table_bins')
+
+def plot_alc_per_max_table(df):
+    """
+    Creates a horizontal boxplot of 'alc' for each specified value/group of 'atk_max_num_anon_datasets':
+    1, 20, 50, 100, and >100. The x-axis is 'alc', the y-axis is the group label.
+    The y-tick labels include the group label and the count of datapoints in each group.
+    For each boxplot, adds a right-justified label showing the count and percent of points with alc >= 0.75.
+    """
+    import numpy as np
+
+    # Define the groups and labels
+    def group_func(val):
+        if val == 1:
+            return "1"
+        elif val == 20:
+            return "20"
+        elif val == 50:
+            return "50"
+        elif val == 100:
+            return "100"
+        elif val > 100:
+            return ">100"
+        else:
+            return None
+
+    df = df.copy()
+    df['atk_max_num_anon_datasets_group'] = df['atk_max_num_anon_datasets'].apply(group_func)
+    group_labels = ["1", "20", "50", "100", ">100"]
+
+    # Filter out rows not in any group
+    df = df[df['atk_max_num_anon_datasets_group'].isin(group_labels)]
+
+    # Count the number of datapoints in each group
+    group_counts = df['atk_max_num_anon_datasets_group'].value_counts().reindex(group_labels, fill_value=0)
+    yticklabels = [f"{label}\n({count})" for label, count in zip(group_labels, group_counts)]
+
+    plt.figure(figsize=(5, 3))
+    ax = sns.boxplot(
+        data=df,
+        x='alc',
+        y='atk_max_num_anon_datasets_group',
+        order=group_labels,
+        orient='h'
+    )
+    ax.set_yticklabels(yticklabels)
+    plt.xlabel('ALC')
+    plt.ylabel('Number of Datasets')
+    ax.axvline(x=0, color='black', linestyle='--', linewidth=1)
+    ax.axvline(x=0.5, color='green', linestyle='--', linewidth=1)
+    ax.axvline(x=0.75, color='red', linestyle='--', linewidth=1)
+    plt.tight_layout()
+
+    # Add right-justified text labels for each boxplot
+    xlim = ax.get_xlim()
+    x_right = xlim[1]
+    for i, label in enumerate(group_labels):
+        group_df = df[df['atk_max_num_anon_datasets_group'] == label]
+        total = len(group_df)
+        cnt = (group_df['alc'] >= 0.75).sum()
+        val = 0 if total == 0 else round(100 * cnt / total, 1)
+        text = f"{cnt} ({val}%)"
+        ytick_pos = i
+        ax.text(
+            x_right, ytick_pos - 0.14,
+            text,
+            ha='right',
+            va='bottom',
+            fontsize=9,
+            color='black',
+            clip_on=False
+        )
+    save_plot(plt, 'alc_per_max_table')
+
+def list_bad_rows(df):
+    """
+    Prints details for each row in df where alc >= 0.75, sorted by alc descending.
+    Columns printed: alc, base_prec, base_recall, attack_prec, attack_recall, secret_column, known_columns
+    """
+    bad_rows = df[df['alc'] >= 0.75].sort_values('alc', ascending=False)
+    for _, row in bad_rows.iterrows():
+        print(
+            f"alc: {row['alc']}, "
+            f"base_prec: {row['base_prec']}, "
+            f"base_recall: {row['base_recall']}, "
+            f"attack_prec: {row['attack_prec']}, "
+            f"attack_recall: {row['attack_recall']},\n"
+            f"     {row['dataset']}, "
+            f"secret: {row['secret_column']}, "
+            f"known: {row['known_columns']}"
+        )
+
 def do_plots():
-    pass
+    df_summ = pd.read_parquet(summary_data_file)
+    print(df_summ.columns)
+    ps = PlotsStuff(df_summ, '')
+    print(ps.describe())
+    df = ps.df_unpaired
+    print("Description of atk_max_num_anon_datasets")
+    print(df['atk_max_num_anon_datasets'].describe())
+    plot_alc_per_max_table_bins(df)
+    plot_num_datasets(df)
+    plot_alc_per_max_table(df)
+    list_bad_rows(df)
 
 def do_gather():
-    out_name = f'all_secret_known.parquet'
     # List to store dataframes
     dataframes = []
     
@@ -164,8 +352,8 @@ def do_gather():
         combined_df = pd.concat(dataframes, ignore_index=True)
         
         # Write the combined dataframe to a parquet file
-        combined_df.to_parquet(out_name, index=False)
-        print(f"Parquet file written: {out_name}")
+        combined_df.to_parquet(summary_data_file, index=False)
+        print(f"Parquet file written: {summary_data_file}")
     else:
         print("No files named 'summary_secret_known.csv' were found.")
 
