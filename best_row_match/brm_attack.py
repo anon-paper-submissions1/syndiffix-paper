@@ -6,6 +6,7 @@ import pandas as pd
 import random
 import matplotlib.pyplot as plt
 import seaborn as sns
+import itertools
 import pprint
 from anonymity_loss_coefficient import BrmAttack
 from anonymity_loss_coefficient.utils import get_good_known_column_sets, prepare_anon_list
@@ -18,7 +19,7 @@ max_tables = [1, 20, 50, 100, 5000]
 if 'SDX_TEST_DIR' in os.environ:
     base_path = os.getenv('SDX_TEST_DIR')
 else:
-    base_path = os.getcwd()
+    base_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 if 'SDX_TEST_CODE' in os.environ:
     code_path = os.getenv('SDX_TEST_CODE')
     code_path = os.path.join(code_path, 'best_row_match')
@@ -28,13 +29,23 @@ else:
 syn_path = os.path.join(base_path, 'synDatasets')
 attack_path = os.path.join(base_path, 'best_row_match')
 os.makedirs(attack_path, exist_ok=True)
+plots_dir = os.path.join(attack_path, 'plots')
+orig_files_dir = os.path.join(base_path, 'original_data_parquet')
+
+# These are global values
 jobs_path = os.path.join(attack_path, 'jobs.json')
 work_files_dir_path = os.path.join(attack_path, 'work_files')
 os.makedirs(work_files_dir_path, exist_ok=True)
-plots_dir = os.path.join(attack_path, 'plots')
 summary_data_file = f'all_secret_known.parquet'
+attack_slurm_dir = os.path.join(attack_path, 'attack.slurm')
 
-orig_files_dir = os.path.join(base_path, 'original_data_parquet')
+def set_paths_all():
+    global jobs_path, work_files_dir_path, summary_data_file, attack_slurm_dir
+    jobs_path = os.path.join(attack_path, 'jobs_all.json')
+    work_files_dir_path = os.path.join(attack_path, 'work_files_all')
+    os.makedirs(work_files_dir_path, exist_ok=True)
+    summary_data_file = f'all_secret_known_all.parquet'
+    attack_slurm_dir = os.path.join(attack_path, 'attack_all.slurm')
 
 def do_attack(job_num):
     with open(jobs_path, 'r') as f:
@@ -308,20 +319,22 @@ def list_bad_rows(df):
             f"known: {row['known_columns']}"
         )
 
-def do_plots():
+def do_plots(attack_all):
     df_summ = pd.read_parquet(summary_data_file)
     print(df_summ.columns)
     ps = PlotsStuff(df_summ, '')
     print(ps.describe())
     df = ps.df_unpaired
-    print("Description of atk_max_num_anon_datasets")
-    print(df['atk_max_num_anon_datasets'].describe())
     plot_alc_per_max_table_bins(df)
     plot_num_datasets(df)
     plot_alc_per_max_table(df)
     list_bad_rows(df)
+    print("Description of atk_max_num_anon_datasets")
+    print(df['atk_max_num_anon_datasets'].describe())
+    # get count of each unique value in model_name
+    print(df['model_name'].value_counts())
 
-def do_gather():
+def do_gather(attack_all):
     # List to store dataframes
     dataframes = []
     
@@ -371,7 +384,21 @@ def num_attackable_tables(
         num_attackable += 1
     return num_attackable
 
-def do_config():
+def prepare_random_known_column_sets(columns):
+    max_examples_per_num_known = 200
+    known_column_sets = []
+    columns = list(columns)
+    for num_known in range(1, 6):
+        # All possible combinations
+        all_combos = list(itertools.combinations(columns, num_known))
+        # Shuffle and select up to max_examples_per_num_known
+        random.shuffle(all_combos)
+        selected = all_combos[:max_examples_per_num_known]
+        for combo in selected:
+            known_column_sets.append(list(combo))
+    return known_column_sets
+
+def do_config(attack_all):
     jobs = []
     files_list = os.listdir(orig_files_dir)
     for file_name in files_list:
@@ -388,23 +415,28 @@ def do_config():
             anon_cols_list.append(df.columns.tolist())
 
         print(f"    {file_name_prefix} has {len(anon_cols_list)} tables.")
-        # First populate with the cases where all columns are known
-        columns = list(df_orig.columns)
-        random.shuffle(columns)
-        for secret_column in columns[:10]:
-            # make a list with all columns except column
-            other_columns = [c for c in df_orig.columns if c != secret_column]
-            num_attackable = num_attackable_tables(anon_cols_list, other_columns, secret_column)
-            for max_table in max_tables:
-                if max_table < num_attackable:
-                    jobs.append({"approach": "ours", "dataset": file_name, "known_columns": other_columns, "secret_column": secret_column, "max_tables": max_table})
-                else:
-                    jobs.append({"approach": "ours", "dataset": file_name, "known_columns": other_columns, "secret_column": secret_column, "max_tables": num_attackable})
-                    break
+        if not attack_all:
+            # First populate with the cases where all columns are known
+            columns = list(df_orig.columns)
+            random.shuffle(columns)
+            for secret_column in columns[:10]:
+                # make a list with all columns except column
+                other_columns = [c for c in df_orig.columns if c != secret_column]
+                num_attackable = num_attackable_tables(anon_cols_list, other_columns, secret_column)
+                for max_table in max_tables:
+                    if max_table < num_attackable:
+                        jobs.append({"approach": "ours", "dataset": file_name, "known_columns": other_columns, "secret_column": secret_column, "max_tables": max_table})
+                    else:
+                        jobs.append({"approach": "ours", "dataset": file_name, "known_columns": other_columns, "secret_column": secret_column, "max_tables": num_attackable})
+                        break
 
-        # Populate with attackable (because of uniques) known column sets
-        print(f"    Finding good known column sets for {file_name_prefix}")
-        known_column_sets = get_good_known_column_sets(df_orig, list(df_orig.columns), max_sets=100)
+        if not attack_all:
+            # Populate with attackable (because of uniques) known column sets
+            print(f"    Finding good known column sets for {file_name_prefix}")
+            known_column_sets = get_good_known_column_sets(df_orig, list(df_orig.columns), max_sets=100)
+        else:
+            known_column_sets = prepare_random_known_column_sets(list(df_orig.columns))
+
         for column_set in known_column_sets:
             columns = list(df_orig.columns)
             random.shuffle(columns)
@@ -454,27 +486,34 @@ source {venv_path}
 python {exe_path} attack $arrayNum
 '''
     # write the slurm template to a file attack.slurm
-    with open(os.path.join(attack_path, 'attack.slurm'), 'w') as f:
+    with open(attack_slurm_dir, 'w') as f:
         f.write(slurm_template)
 
 def main():
     parser = argparse.ArgumentParser(description="Run attacks, plots, or configuration.")
     parser.add_argument("command", choices=["attack", "plot", "gather", "config"], help="Command to execute")
     parser.add_argument("job_num", nargs="?", type=int, help="Job number (required for 'attack')")
+    parser.add_argument("-a", "--all", action="store_true", help="Set attack_all to True if present")
 
     args = parser.parse_args()
+    # The attack_all flag generates attacks for randomly selected attack configs, not just
+    # the ones that are attackable by virtue of having mostly uniques.
+    attack_all = args.all
+    if attack_all is True:
+        set_paths_all()
 
     if args.command == "attack":
         if args.job_num is None:
             print("Error: 'attack' command requires a job number.")
             sys.exit(1)
+        # attack_all is available here if needed
         do_attack(args.job_num)
     elif args.command == "plot":
-        do_plots()
+        do_plots(attack_all)
     elif args.command == "gather":
-        do_gather()
+        do_gather(attack_all)
     elif args.command == "config":
-        do_config()
+        do_config(attack_all)
 
 if __name__ == "__main__":
     main()
