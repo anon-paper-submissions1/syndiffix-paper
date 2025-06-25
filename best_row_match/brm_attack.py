@@ -38,14 +38,16 @@ work_files_dir_path = os.path.join(attack_path, 'work_files')
 os.makedirs(work_files_dir_path, exist_ok=True)
 summary_data_file = f'all_secret_known.parquet'
 attack_slurm_dir = os.path.join(attack_path, 'attack.slurm')
+slurm_flag = ''
 
 def set_paths_all():
-    global jobs_path, work_files_dir_path, summary_data_file, attack_slurm_dir
+    global jobs_path, work_files_dir_path, summary_data_file, attack_slurm_dir, slurm_flag
     jobs_path = os.path.join(attack_path, 'jobs_all.json')
     work_files_dir_path = os.path.join(attack_path, 'work_files_all')
     os.makedirs(work_files_dir_path, exist_ok=True)
     summary_data_file = f'all_secret_known_all.parquet'
     attack_slurm_dir = os.path.join(attack_path, 'attack_all.slurm')
+    slurm_flag = '--all'
 
 def do_attack(job_num):
     with open(jobs_path, 'r') as f:
@@ -483,7 +485,7 @@ def do_config(attack_all):
 #SBATCH --array=0-{num_jobs}
 arrayNum="${{SLURM_ARRAY_TASK_ID}}"
 source {venv_path}
-python {exe_path} attack $arrayNum
+python {exe_path} {slurm_flag} attack $arrayNum
 '''
     # write the slurm template to a file attack.slurm
     with open(attack_slurm_dir, 'w') as f:
