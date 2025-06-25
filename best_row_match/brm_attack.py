@@ -385,7 +385,7 @@ def num_attackable_tables(
     return num_attackable
 
 def prepare_random_known_column_sets(columns):
-    max_examples_per_num_known = 25
+    max_examples_per_num_known = 15
     known_column_sets = []
     columns = list(columns)
     for num_known in range(1, 6):
